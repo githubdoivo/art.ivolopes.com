@@ -14,7 +14,9 @@ export function corsHeaders(request, env) {
 
 /** Checks the fields; returns { error } or the cleaned values. */
 export function validate(form) {
-  const name = String(form.get("name") || "").trim();
+  // Line breaks and other control characters are flattened, so a name can never add
+  // lines to the email's subject or Reply-To
+  const name = String(form.get("name") || "").replace(/[\u0000-\u001f\u007f]+/g, " ").trim();
   const email = String(form.get("email") || "").trim().toLowerCase();
   const description = String(form.get("description") || "").trim();
   const lang = form.get("lang") === "pt" ? "pt" : "en";

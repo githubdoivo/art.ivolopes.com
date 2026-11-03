@@ -54,3 +54,15 @@ test("only the art site may post orders", () => {
   assert.equal(corsHeaders(req("https://art.ivolopes.com"), env)["Access-Control-Allow-Origin"], "https://art.ivolopes.com");
   assert.equal(corsHeaders(req("https://evil.example"), env)["Access-Control-Allow-Origin"], undefined);
 });
+
+test("a name with line breaks is flattened, so it cannot add lines to the email", async () => {
+  const { validate } = await import("../src/order.js");
+  const f = new FormData();
+  f.append("name", "Ana\r\nBcc: someone@example.com");
+  f.append("email", "ana@example.com");
+  f.append("description", "A blue bowl, please.");
+  f.append("consent", "yes");
+  f.append("photos", new File([new Uint8Array(10)], "a.jpg", { type: "image/jpeg" }));
+  const o = validate(f);
+  assert.equal(o.name, "Ana Bcc: someone@example.com");
+});
