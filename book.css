@@ -10,12 +10,19 @@
   color-scheme: only light;
 }
 * { box-sizing: border-box; }
-html { background: var(--paper); scroll-behavior: smooth; }
-@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
-body {
-  margin: 0; color: var(--ink); font: 18px/1.55 var(--body);
-  background: var(--paper) url(book/paper-tile.webp) 0 0 / 560px 560px repeat;
-}
+html { background: var(--paper); }
+/* Same phone frame as ivolopes.com: iPhone Safari paints a solid band over anything pinned to the
+   screen edges, so the window never scrolls and nothing is fixed. The paper (.bg) holds still and
+   reaches 160px above the screen (frame.js keeps the window there, so the clock sits on paper) and
+   past the bottom bar on phones; only #page scrolls. */
+:root { --above: 160px; --below: 0px; }
+@media (pointer: coarse) { :root { --below: 120px; } }
+html, body { height: 100%; overflow: hidden; overscroll-behavior: none; }
+body { margin: 0; color: var(--ink); font: 18px/1.55 var(--body); }
+.bg, .page { position: absolute; top: 0; left: 0; right: 0; height: calc(100vh + var(--above) + var(--below)); height: calc(100lvh + var(--above) + var(--below)); }
+.bg { z-index: 0; background: var(--paper) url(book/paper-tile.webp) 0 0 / 560px 560px repeat; }
+.page { z-index: 1; padding-top: var(--above); padding-bottom: calc(100lvh - 100svh + var(--below)); overflow-x: hidden; overflow-y: auto; overscroll-behavior: none; scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { .page { scroll-behavior: auto; } }
 img { max-width: 100%; height: auto; }
 h1, h2, p { margin: 0; }
 h2 { font: 500 clamp(30px, 4vw, 40px)/1.1 var(--display); text-wrap: balance; }
@@ -70,7 +77,7 @@ section > h2 { margin-bottom: 18px; }
 /* The scroll story: a tall section whose stage sticks to the screen. */
 .story.moving { height: 460vh; }
 .stage > h2 { margin-bottom: 18px; }
-.moving .stage { position: sticky; top: 0; height: 100vh; height: 100svh; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; align-items: center; gap: 12px; padding-block: 22px 28px; }
+.moving .stage { position: sticky; top: var(--above); height: 100vh; height: 100svh; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; align-items: center; gap: 12px; padding-block: 22px 28px; }
 .moving .stage > h2 { margin: 0; }
 .moving .steps { display: block; position: relative; width: min(88vw, 50svh, 400px); height: 100%; margin: 0 auto; }
 .moving .card { position: absolute; left: 0; top: 50%; width: 88%; left: 6%; translate: 0 -50%; will-change: transform, opacity; opacity: 0; }

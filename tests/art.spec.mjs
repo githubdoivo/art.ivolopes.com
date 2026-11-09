@@ -188,7 +188,8 @@ test("the header has no menu: only the language switch", async ({ page }) => {
 test("the header painting and every image load", async ({ page, request }) => {
   await page.goto("/?lang=en");
   for (const f of ["/book/header.webp", "/book/header-900.webp"]) expect((await request.get(f)).ok(), f).toBe(true);
-  await page.evaluate(async () => { for (let y = 0; y < document.body.scrollHeight; y += 600) { scrollTo(0, y); await new Promise((r) => setTimeout(r, 60)); } });
+  // #page scrolls (phone frame), not the window
+  await page.evaluate(async () => { const pg = document.getElementById("page"); for (let y = 0; y < pg.scrollHeight; y += 600) { pg.scrollTo({ top: y, behavior: "instant" }); await new Promise((r) => setTimeout(r, 60)); } });
   const broken = () => page.$$eval("img", (imgs) => imgs.filter((i) => !i.complete || !i.naturalWidth).map((i) => i.getAttribute("src")));
   await expect.poll(broken, { timeout: 10_000 }).toEqual([]);
 });
@@ -196,10 +197,11 @@ test("the header painting and every image load", async ({ page, request }) => {
 test("the making is told as a scroll story: each step takes its turn, and all five notes stay", async ({ page }) => {
   await page.goto("/?lang=en");
   await expect(page.locator("#story")).toHaveClass(/moving/);
-  const story = await page.locator("#story").evaluate((el) => ({ top: el.getBoundingClientRect().top + scrollY, run: el.offsetHeight - innerHeight }));
+  // #page scrolls (phone frame); the story starts when its top reaches the top of the screen
+  const story = await page.locator("#story").evaluate((el) => ({ top: el.getBoundingClientRect().top + document.getElementById("page").scrollTop, run: el.offsetHeight - innerHeight }));
   const names = ["Clay", "Shaping", "Drying", "Firing", "Glazing"];
   for (let i = 0; i < 5; i++) {
-    await page.evaluate((y) => scrollTo(0, y), story.top + (story.run * i) / 4);
+    await page.evaluate((y) => document.getElementById("page").scrollTo({ top: y, behavior: "instant" }), story.top + (story.run * i) / 4);
     await expect(page.locator(".lines li.on h3")).toHaveText(names[i]);
   }
   const shown = await page.$$eval("#steps .card", (cs) => cs.map((c) => +getComputedStyle(c).opacity));
@@ -257,4 +259,18 @@ for (const path of ["/?lang=en", "/order/?lang=en"]) {
 test("the skip link speaks the page's language", async ({ page }) => {
   await page.goto("/?lang=pt");
   await expect(page.locator(".skip")).toHaveText("Saltar para o Conteúdo");
+});
+
+for (const path of ["/", "/order/"]) test(`phone frame on ${path}: nothing pinned, window rests 160px down, paper past both edges, page scrolls`, async ({ page }) => {
+  await page.goto(path);
+  await page.waitForFunction(() => Math.abs(window.scrollY - 160) < 1);
+  const r = await page.evaluate(() => {
+    const pinned = [...document.querySelectorAll("body *")].filter((e) => getComputedStyle(e).position === "fixed").map((e) => e.className || e.tagName);
+    const bg = document.querySelector(".bg").getBoundingClientRect(), pg = document.getElementById("page");
+    return { pinned, top: bg.top, bottom: bg.bottom, ih: innerHeight, scrolls: pg.scrollHeight > pg.clientHeight };
+  });
+  expect(r.pinned).toEqual([]);
+  expect(r.top).toBeLessThanOrEqual(-159);
+  expect(r.bottom).toBeGreaterThanOrEqual(r.ih);
+  expect(r.scrolls).toBe(true);
 });

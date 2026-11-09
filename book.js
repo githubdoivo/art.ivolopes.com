@@ -99,7 +99,7 @@
       box.classList.toggle("started", p > .15);
     };
     const ask = () => { if (!queued) { queued = true; requestAnimationFrame(draw); } };
-    addEventListener("scroll", ask, { passive: true });
+    addEventListener("scroll", ask, { passive: true, capture: true });   // #page scrolls, not the window
     addEventListener("resize", ask);
     draw();
   }
