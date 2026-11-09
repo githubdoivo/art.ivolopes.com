@@ -77,7 +77,7 @@ section > h2 { margin-bottom: 18px; }
 /* The scroll story: a tall section whose stage sticks to the screen. */
 .story.moving { height: 460vh; }
 .stage > h2 { margin-bottom: 18px; }
-.moving .stage { position: sticky; top: var(--above); height: 100vh; height: 100svh; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; align-items: center; gap: 12px; padding-block: 22px 28px; }
+.moving .stage { position: sticky; top: 0; height: 100vh; height: 100svh; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; align-items: center; gap: 12px; padding-block: 22px 28px; }
 .moving .stage > h2 { margin: 0; }
 .moving .steps { display: block; position: relative; width: min(88vw, 50svh, 400px); height: 100%; margin: 0 auto; }
 .moving .card { position: absolute; left: 0; top: 50%; width: 88%; left: 6%; translate: 0 -50%; will-change: transform, opacity; opacity: 0; }

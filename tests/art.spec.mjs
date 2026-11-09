@@ -274,3 +274,15 @@ for (const path of ["/", "/order/"]) test(`phone frame on ${path}: nothing pinne
   expect(r.bottom).toBeGreaterThanOrEqual(r.ih);
   expect(r.scrolls).toBe(true);
 });
+
+test("the making's stage sticks at the very top of the screen while its story plays", async ({ page }) => {
+  await page.goto("/?lang=en");
+  await expect(page.locator("#story")).toHaveClass(/moving/);
+  const top = await page.evaluate(async () => {
+    const s = document.getElementById("story"), pg = document.getElementById("page");
+    pg.scrollTo({ top: s.getBoundingClientRect().top + pg.scrollTop + (s.offsetHeight - innerHeight) / 2, behavior: "instant" });
+    await new Promise((r) => setTimeout(r, 100));
+    return s.querySelector(".stage").getBoundingClientRect().top;
+  });
+  expect(Math.abs(top)).toBeLessThan(1);
+});
